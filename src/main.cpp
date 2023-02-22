@@ -1,6 +1,9 @@
 #include "Arduino.h"
 #include <HardwareSerial.h>
 #include <TinyGPSPlus.h>
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_HMC5883_U.h>
 
 #define GPS_SERIAL_RX 16
 #define GPS_SERIAL_TX 17
@@ -10,6 +13,7 @@
 
 
 TinyGPSPlus gps;
+Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
 
 void displayInfo()
 {
@@ -74,6 +78,14 @@ void displayInfo()
     Serial.print(F("INVALID"));
   }
 
+  sensors_event_t mag_event; 
+  mag.getEvent(&mag_event);
+  {
+    Serial.print(" Compass X: "); Serial.print(mag_event.magnetic.x);
+    Serial.print(" Y: "); Serial.print(mag_event.magnetic.y);
+    Serial.print(" Z: "); Serial.print(mag_event.magnetic.z);
+  }
+
   Serial.println();
 }
 
@@ -81,6 +93,13 @@ void setup()
 {
   Serial.begin(9600);
   Serial2.begin(GPS_SERIAL_BAUD_RATE, GPS_SERIAL_MODE, GPS_SERIAL_RX, GPS_SERIAL_TX);
+
+  if(!mag.begin())
+  {
+    /* There was a problem detecting the HMC5883 ... check your connections */
+    Serial.println("Ooops, no HMC5883 detected ... Check your wiring!");
+    while(1);
+  }
 }
 
 void loop()
