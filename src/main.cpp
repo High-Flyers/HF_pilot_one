@@ -1,126 +1,66 @@
 #include "Arduino.h"
-#include <HardwareSerial.h>
-#include <TinyGPSPlus.h>
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_MPU6050.h>
-#include <Adafruit_HMC5883_U.h>
+#include "Sensors.h"
 
-#define GPS_SERIAL_RX 16
-#define GPS_SERIAL_TX 17
-#define GPS_SERIAL_BAUD_RATE 38400
-#define GPS_SERIAL_MODE SERIAL_8N1
-
-#define MPU_ADRESS (u_int8_t)0x69
-
-TinyGPSPlus gps;
-Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
-Adafruit_MPU6050 mpu;
+TaskHandle_t mpu_task, compass_task, gps_task;
+MPU_data mpu_d;
+Compass_data compass_d;
+GPS_data gps_d;
 
 void displayInfo()
 {
-  Serial.print(F("Location: "));
-  if (gps.location.isValid())
+  Serial.print("ACC: ");
+  Serial.print(mpu_d.acc_x);
+  Serial.print(" ");
+  Serial.print(mpu_d.acc_y);
+  Serial.print(" ");
+  Serial.print(mpu_d.acc_z);
+  Serial.print(" ");
+  Serial.print("GYRO: ");
+  Serial.print(mpu_d.gyro_x);
+  Serial.print(" ");
+  Serial.print(mpu_d.gyro_y);
+  Serial.print(" ");
+  Serial.print(mpu_d.gyro_z);
+  Serial.print(" ");
+  Serial.print("COMPASS: ");
+  Serial.print(compass_d.mag_x);
+  Serial.print(" ");
+  Serial.print(compass_d.mag_y);
+  Serial.print(" ");
+  Serial.print(compass_d.mag_z);
+  Serial.print(" ");
+  if (gps_d.avalaible)
   {
-    Serial.print(gps.location.lat(), 6);
-    Serial.print(F(", "));
-    Serial.print(gps.location.lng(), 6);
-  }
-  else
-  {
-    Serial.print(F("INVALID"));
-  }
-
-  Serial.print(F(" "));
-  if (gps.satellites.isValid())
-  {
-    Serial.print(F("Satellites: "));
-    Serial.print(gps.satellites.value());
-  }
-  else
-  {
-    Serial.print(F("INVALID"));
-  }
-
-  sensors_event_t mag_event;
-  mag.getEvent(&mag_event);
-  {
-    Serial.print(" Compass X: ");
-    Serial.print(mag_event.magnetic.x);
-    Serial.print(" Y: ");
-    Serial.print(mag_event.magnetic.y);
-    Serial.print(" Z: ");
-    Serial.print(mag_event.magnetic.z);
-  }
-
-  {
-    /* Get new sensor events with the readings */
-    sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
-
-    /* Print out the values */
+    Serial.print("GPS: ");
+    Serial.print(gps_d.lat);
     Serial.print(" ");
-    Serial.print("AccelX:");
-    Serial.print(a.acceleration.x);
-    Serial.print(",");
-    Serial.print("AccelY:");
-    Serial.print(a.acceleration.y);
-    Serial.print(",");
-    Serial.print("AccelZ:");
-    Serial.print(a.acceleration.z);
-    Serial.print(", ");
-    Serial.print("GyroX:");
-    Serial.print(g.gyro.x);
-    Serial.print(",");
-    Serial.print("GyroY:");
-    Serial.print(g.gyro.y);
-    Serial.print(",");
-    Serial.print("GyroZ:");
-    Serial.print(g.gyro.z);
+    Serial.print(gps_d.lon);
+    Serial.print(" ");
   }
 
   Serial.println();
 }
 
+void start_sensors()
+{
+  mpu_init(&mpu_d);
+  gps_init(&gps_d);
+  compass_init(&compass_d);
+
+  xTaskCreate(mpu_handler, "mpu_handler", 2000, &mpu_d, 1, &mpu_task);
+  xTaskCreate(compass_handler, "compass_handler", 2000, &compass_d, 1, &compass_task);
+  xTaskCreate(gps_handler, "gps_handler", 2000, &gps_d, 1, &gps_task);
+}
+
 void setup()
 {
   Serial.begin(9600);
-  Serial2.begin(GPS_SERIAL_BAUD_RATE, GPS_SERIAL_MODE, GPS_SERIAL_RX, GPS_SERIAL_TX);
-
-  if (!mag.begin())
-  {
-    while (1)
-    {
-      Serial.println("Ooops, no HMC5883 detected ... Check your wiring!");
-      delay(500);
-    }
-  }
-
-  if (!mpu.begin(MPU_ADRESS))
-  {
-    while (1)
-    {
-      Serial.println("Failed to find MPU6050 chip");
-      delay(500);
-    }
-  }
-  Serial.println("MPU6050 Found!");
-
-  // setupt motion detection
-  mpu.setAccelerometerRange(MPU6050_RANGE_16_G);
-  mpu.setGyroRange(MPU6050_RANGE_1000_DEG);
+  start_sensors();
+  delay(1000);
 }
 
 void loop()
 {
-  while (Serial2.available() > 0)
-  {
-    if (gps.encode(Serial2.read()))
-      displayInfo();
-  }
-
-  if (millis() > 5000 && gps.charsProcessed() < 10)
-  {
-    Serial.println(F("No GPS detected: check wiring."));
-  }
+  displayInfo();
+  delay(400);
 }
