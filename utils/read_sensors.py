@@ -43,7 +43,6 @@ class SensorParser:
     def print(self):
         print(self.acc, self.gyro, self.mag, self.lat, self.lon, self.sat_amount, self.gps_avalaible)
 
-sensors = SensorParser()
 
 class MqttWrapper:
     def __init__(self):
@@ -58,21 +57,23 @@ class MqttWrapper:
         self.client.loop_start()
         self.data = None
         self.client.subscribe("HP_PILOT_ONE/sensors")
+        self.sensor_callback = None
         
         while self.flag_connected == 0:
             print("conecting...")
             time.sleep(1)
-        print("Connected to MQTT server!") 
+        print("Connected to MQTT server!")
+    
+    def set_sensor_callback(self, clbck):
+        self.sensor_callback = clbck
         
-        
-
     def stop(self):
         self.client.loop_stop()
 
     def on_message(self, mqttc, obj, msg):
         if msg.topic == "HP_PILOT_ONE/sensors":
-            sensors.unpack(msg.payload)
-            sensors.print()
+            if self.sensor_callback is not None:
+                self.sensor_callback(msg.payload)
 
     def checkIfConnected(self):
         """checks if connected and tries to reconnect. Warning! this func is blocking!"""
@@ -99,8 +100,21 @@ class MqttWrapper:
 def main():
     mqtt = MqttWrapper()
     mqtt.checkIfConnected()
+    sensors = SensorParser(
+
+    )
+    def callback(data):
+        sensors.unpack(data)
+        # print("{:.3f} {:.3f} {:.3f}".format(sensors.mag[0], sensors.mag[1], sensors.mag[2]))
+    mqtt.set_sensor_callback(callback)
+        
+    # file = open("mag_data.csv", 'w')
+    # file.write("x y z\n")
+    
     while(True):
-        time.sleep(1)
+        # file.write("{:.7f} {:.7f} {:.7f}\n".format(sensors.mag[0], sensors.mag[1], sensors.mag[2]))
+        # file.flush()
+        time.sleep(1 / 100)
 
 
 if __name__ == "__main__":

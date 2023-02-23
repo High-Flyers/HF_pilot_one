@@ -123,9 +123,9 @@ void compass_handler(void *param)
 
         sensors_event_t mag_event;
         mag.getEvent(&mag_event);
-        data->mag_x = mag_event.magnetic.x;
-        data->mag_y = mag_event.magnetic.y;
-        data->mag_z = mag_event.magnetic.z;
+        data->mag_x = mag_event.magnetic.x - COMPASS_CORRECTION_X;
+        data->mag_y = mag_event.magnetic.y - COMPASS_CORRECTION_Y;
+        data->mag_z = mag_event.magnetic.z - COMPASS_CORRECTION_Z;
 
         u_int32_t end = millis() - start;
         if (end < rate)
