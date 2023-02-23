@@ -48,23 +48,23 @@ void displayInfo()
 void mqtt_pack_and_send()
 {
   int i;
-  for (i = 0; i < 2 * sizeof(MPU_data); i += 2)
+  for (i = 0; i < sizeof(MPU_data); i++)
   {
     char raw = ((char *)&mpu_d)[i];
-    mqtt_data[i] = ascii_lookup[raw & 0x0F];
-    mqtt_data[i + 1] = ascii_lookup[(raw & 0xF0) >> 4];
+    mqtt_data[2 * i] = ascii_lookup[raw >> 4];
+    mqtt_data[2 * i + 1] = ascii_lookup[raw & 0x0F];
   }
-  for (i = 0; i < 2 * sizeof(Compass_data); i += 2)
+  for (i = 0; i < sizeof(Compass_data); i++)
   {
     char raw = ((char *)&compass_d)[i];
-    mqtt_data[2 * sizeof(MPU_data) + i] = ascii_lookup[raw & 0x0F];
-    mqtt_data[2 * sizeof(MPU_data) + i + 1] = ascii_lookup[(raw & 0xF0) >> 4];
+    mqtt_data[2 * sizeof(MPU_data) + 2 * i] = ascii_lookup[raw >> 4];
+    mqtt_data[2 * sizeof(MPU_data) + 2 * i + 1] = ascii_lookup[raw & 0x0F];
   }
-  for (i = 0; i < 2 * sizeof(GPS_data); i += 2)
+  for (i = 0; i < sizeof(GPS_data); i++)
   {
     char raw = ((char *)&gps_d)[i];
-    mqtt_data[2 * (sizeof(MPU_data) + sizeof(Compass_data)) + i] = ascii_lookup[raw & 0x0F];
-    mqtt_data[2 * (sizeof(MPU_data) + sizeof(Compass_data)) + i + 1] = ascii_lookup[(raw & 0xF0) >> 4];
+    mqtt_data[2 * (sizeof(MPU_data) + sizeof(Compass_data)) + 2 * i] = ascii_lookup[raw >> 4];
+    mqtt_data[2 * (sizeof(MPU_data) + sizeof(Compass_data)) + 2 * i + 1] = ascii_lookup[raw & 0x0F];
   }
   mqtt_data[2 * (sizeof(MPU_data) + sizeof(Compass_data) + sizeof(GPS_data))] = 0;
   mqtt_conn.mqtt_client->publish("HP_PILOT_ONE/sensors", mqtt_data);

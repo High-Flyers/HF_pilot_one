@@ -1,8 +1,49 @@
 import time
 import datetime
+import struct
+import numpy as np
 import paho.mqtt.client as mqtt
 
 MQTT_URL = "192.168.50.13"
+
+class SensorParser:
+    def __init__(self):
+        self.acc = np.zeros(3, dtype=np.float32)
+        self.gyro = np.zeros(3, dtype=np.float32)
+        self.mag = np.zeros(3, dtype=np.float32)
+        self.gps_avalaible = False
+        self.lat = 0
+        self.lon = 0
+        self.sat_amount = 0
+
+    def unpack(self, data):
+        arr = []
+        for i in range(0, len(data), 2):
+            high = 16 * (data[i] - 48 if data[i] < 65 else data[i] - 65 + 10)
+            low = data[i+1] - 48 if data[i+1] < 65 else data[i+1] - 65 + 10
+            arr.append(high+low)
+        arr = bytearray(arr)
+
+        [
+            self.acc[0], 
+            self.acc[1],
+            self.acc[2],
+            self.gyro[0],
+            self.gyro[1],
+            self.gyro[2],
+            self.mag[0],
+            self.mag[1],
+            self.mag[2],
+            self.lat,
+            self.lon,
+            self.sat_amount,
+            self.gps_avalaible,
+        ] = struct.unpack('<fff fff fff ddHH xxxx', arr)
+
+    def print(self):
+        print(self.acc, self.gyro, self.mag, self.lat, self.lon, self.sat_amount, self.gps_avalaible)
+
+sensors = SensorParser()
 
 class MqttWrapper:
     def __init__(self):
@@ -29,7 +70,9 @@ class MqttWrapper:
         self.client.loop_stop()
 
     def on_message(self, mqttc, obj, msg):
-        print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
+        if msg.topic == "HP_PILOT_ONE/sensors":
+            sensors.unpack(msg.payload)
+            sensors.print()
 
     def checkIfConnected(self):
         """checks if connected and tries to reconnect. Warning! this func is blocking!"""

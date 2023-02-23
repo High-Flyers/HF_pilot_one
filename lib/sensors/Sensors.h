@@ -15,8 +15,8 @@
 
 typedef struct
 {
-    bool avalaible;
     double lat, lon;
+    uint16_t avalaible;
     uint16_t sat_amount;
 } GPS_data;
 

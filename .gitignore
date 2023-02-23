@@ -4,4 +4,5 @@
 .ccls
 .cache
 .vscode
+.DS_Store
 passwords.h
