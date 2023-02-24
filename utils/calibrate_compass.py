@@ -1,6 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+'''
+algorithm taken from: https://www.appelsiini.net/2018/calibrate-magnetometer/
+'''
+
 data = np.genfromtxt("mag_data.csv", delimiter=' ')
 mag_x = data[1:-1,0]
 mag_y = data[1:-1,1]

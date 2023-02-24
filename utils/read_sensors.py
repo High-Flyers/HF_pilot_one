@@ -3,8 +3,30 @@ import datetime
 import struct
 import numpy as np
 import paho.mqtt.client as mqtt
+from vpython import arrow, rate, color, vector
 
 MQTT_URL = "192.168.50.13"
+
+class MovingAverage:
+    def __init__(self, size=60):
+        self.bufferSize = size
+        self.buffer = [np.zeros(3, dtype=np.float32)]*self.bufferSize
+        self.index = 0
+        self.maxed = False
+
+    def insert(self, val):
+        self.buffer[self.index] = val
+        self.index += 1
+        if self.index >= self.bufferSize:
+            self.index = 0
+            self.maxed = True
+
+    def get(self):
+        end = self.bufferSize if self.maxed else self.index + 1
+        sum = np.zeros(3, dtype=np.float32)
+        for i in range(end):
+            sum += self.buffer[i]
+        return sum / end
 
 class SensorParser:
     def __init__(self):
@@ -98,20 +120,28 @@ class MqttWrapper:
         self.client.loop_forever()
 
 def main():
+    arr = arrow(pos=vector(0,0,0), axis=vector(1,0,0), color=color.red)
+    time.sleep(2)
+    
     mqtt = MqttWrapper()
     mqtt.checkIfConnected()
-    sensors = SensorParser(
+    sensors = SensorParser()
+    acc_average = MovingAverage(size=20)
 
-    )
     def callback(data):
         sensors.unpack(data)
-        # print("{:.3f} {:.3f} {:.3f}".format(sensors.mag[0], sensors.mag[1], sensors.mag[2]))
+        sensors.print()
+        acc_average.insert(sensors.acc / np.linalg.norm(sensors.acc))
     mqtt.set_sensor_callback(callback)
         
     # file = open("mag_data.csv", 'w')
     # file.write("x y z\n")
     
     while(True):
+        rate(60)
+        v = acc_average.get()
+        arr.axis = vector(v[1], v[0], v[2])
+        
         # file.write("{:.7f} {:.7f} {:.7f}\n".format(sensors.mag[0], sensors.mag[1], sensors.mag[2]))
         # file.flush()
         time.sleep(1 / 100)
