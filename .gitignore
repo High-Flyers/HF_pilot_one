@@ -7,3 +7,4 @@
 .DS_Store
 passwords.h
 mag_data.csv
+__pycache__/
