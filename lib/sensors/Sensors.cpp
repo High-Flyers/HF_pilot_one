@@ -12,6 +12,7 @@ void gps_init(GPS_data *data)
     data->avalaible = false;
     data->lat = 0.0;
     data->lon = 0.0;
+    data->alt = 0.0;
     data->sat_amount = 0;
 }
 
@@ -34,12 +35,14 @@ void gps_handler(void *param)
             {
                 data->lat = gps.location.lat();
                 data->lon = gps.location.lng();
-
                 data->sat_amount = gps.satellites.value();
                 data->avalaible = data->sat_amount >= 4;
             }
             else
                 data->avalaible = false;
+
+            if (gps.altitude.isValid())
+                data->alt = (float)gps.altitude.meters();
         }
 
         u_int32_t end = millis() - start;
@@ -62,13 +65,13 @@ void mpu_handler(void *param)
     MPU_data *data = (MPU_data *)param;
 
     Adafruit_MPU6050 mpu;
-    if (!mpu.begin(MPU_ADRESS))
+    while (!mpu.begin(MPU_ADRESS))
     {
-        while (1)
-        {
-            Serial.println("Failed to find MPU6050 chip");
-            delay(500);
-        }
+        Serial.println("Failed to find MPU6050 chip");
+        data->acc_x = -1.0;
+        data->acc_x = -1.0;
+        data->acc_x = -1.0;
+        delay(500);
     }
 
     mpu.setAccelerometerRange(MPU6050_RANGE_16_G);

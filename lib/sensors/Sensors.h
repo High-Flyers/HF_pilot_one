@@ -20,8 +20,9 @@
 typedef struct
 {
     double lat, lon;
-    uint16_t avalaible;
-    uint16_t sat_amount;
+    float alt;
+    u_int16_t avalaible;
+    u_int16_t sat_amount;
 } GPS_data;
 
 void gps_init(GPS_data *data);

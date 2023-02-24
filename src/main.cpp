@@ -40,6 +40,8 @@ void displayInfo()
     Serial.print(" ");
     Serial.print(gps_d.lon);
     Serial.print(" ");
+    Serial.print(gps_d.alt);
+    Serial.print("m ");
   }
 
   Serial.println();
@@ -93,7 +95,7 @@ void setup()
 void loop()
 {
   mqtt_loop(&mqtt_conn);
-  // displayInfo();
+  //displayInfo();
   mqtt_pack_and_send();
   delay(10);
 }
