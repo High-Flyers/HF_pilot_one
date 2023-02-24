@@ -95,5 +95,5 @@ void loop()
   mqtt_loop(&mqtt_conn);
   // displayInfo();
   mqtt_pack_and_send();
-  // delay(400);
+  delay(10);
 }
