@@ -34,7 +34,9 @@ def pitch_roll__yaw_from_gyro(gyro, p, r, y, dt):
 
 
 pitch_comb, roll_comb = 0.0, 0.0
+pitch, roll, yaw = 0.0, 0.0, 0.0
 
+count = 0
 def main():    
     mqtt = MqttWrapper()
     mqtt.checkIfConnected()
@@ -45,12 +47,24 @@ def main():
 
     def callback(data):
         global pitch_comb, roll_comb
+        global pitch, roll, yaw
+        global count
         sensors.unpack(data)
         # sensors.print()
         pitch_acc, roll_acc = pitch_roll_from_acc(acc_filter.get(sensors.acc))
         pitch_dt, roll_dt, _ = pitch_roll_yaw_dt_from_gyro(sensors.gyro)
         pitch_comb = pitch_compl.update(pitch_acc, pitch_dt)
         roll_comb = roll_compl.update(roll_acc, roll_dt)
+
+        pitch = sensors.filter_pitch
+        roll = sensors.filter_roll
+        yaw = sensors.filter_yaw
+
+        # count = (count + 1) % 4
+        # if count == 0:
+        #     print(sensors.acc, sensors.mag)
+
+        
 
     mqtt.set_sensor_callback(callback)
         
@@ -60,6 +74,7 @@ def main():
     xs = []
     y1s = []
     y2s = []
+    y3s = []
 
     fig = plt.figure()
     ax1 = fig.add_subplot(1,1,1)
@@ -68,22 +83,28 @@ def main():
         ax1.clear()
         ax1.plot(xs, y1s, 'r-')
         ax1.plot(xs, y2s, 'b-')
+        ax1.plot(xs, y3s, 'g-')
     
     ani = animation.FuncAnimation(fig, animate, interval=int(1000 / 30))
     plt.ion()
     plt.show()
 
+    import time
     while(True):
+        # time.sleep(1)
+        # continue
         # print("{:.2f} {:.2f}\t{:.2f} {:.2f} {:.2f}".format(pitch_acc, roll_acc, pitch_raw_gyro, roll_raw_gyro, yaw_raw_gyro))
-        print("{:.2f} {:.2f}".format(pitch_comb, roll_comb))
+        print("{:.2f} {:.2f} {:.2f}".format(pitch, roll, yaw))
 
         xs.append(time.time())
-        y1s.append(pitch_comb)
-        y2s.append(roll_comb)
+        y1s.append(pitch)
+        y2s.append(roll)
+        y3s.append(yaw)
 
         xs = xs[-4*30:]
         y1s = y1s[-4*30:]
         y2s = y2s[-4*30:]
+        y3s = y3s[-4*30:]
     
         # file.write("{:.7f} {:.7f} {:.7f}\n".format(sensors.mag[0], sensors.mag[1], sensors.mag[2]))
         # file.flush()

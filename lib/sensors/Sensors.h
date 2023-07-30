@@ -4,7 +4,7 @@
 
 #define GPS_RATE 5.0f
 #define MPU_RATE 500.0f
-#define COMPASS_RATE 20.0f
+#define COMPASS_RATE 40.0f
 
 #define GPS_SERIAL_RX 16
 #define GPS_SERIAL_TX 17
@@ -21,8 +21,8 @@ typedef struct
 {
     double lat, lon;
     float alt;
-    u_int16_t avalaible;
-    u_int16_t sat_amount;
+    uint16_t avalaible;
+    uint16_t sat_amount;
 } GPS_data;
 
 void gps_init(GPS_data *data);

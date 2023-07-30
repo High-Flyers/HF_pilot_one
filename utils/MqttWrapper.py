@@ -16,6 +16,9 @@ class SensorParser:
         self.lon = 0
         self.alt = 0
         self.sat_amount = 0
+        self.filter_pitch = 0
+        self.filter_roll = 0
+        self.filter_yaw = 0
 
     def unpack(self, data):
         arr = []
@@ -40,7 +43,10 @@ class SensorParser:
             self.alt,
             self.sat_amount,
             self.gps_avalaible,
-        ] = struct.unpack('<fff fff fff ddfHH', arr)
+            self.filter_pitch,
+            self.filter_roll,
+            self.filter_yaw
+        ] = struct.unpack('<fff fff fff ddfHH fff', arr)
 
     def print(self):
         print(self.acc, self.gyro, self.mag, self.lat, self.lon, self.alt, self.sat_amount, self.gps_avalaible)

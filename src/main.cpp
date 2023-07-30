@@ -1,14 +1,16 @@
 #include "Arduino.h"
 #include "Sensors.h"
+#include "filter.h"
 #include "lookup.h"
 #include "mqtt.h"
 
-TaskHandle_t mpu_task, compass_task, gps_task;
+TaskHandle_t mpu_task, compass_task, gps_task, filter_task;
 MPU_data mpu_d;
 Compass_data compass_d;
 GPS_data gps_d;
+Filter_state filter_state;
 mqtt_conn_data mqtt_conn;
-char mqtt_data[2 * (sizeof(MPU_data) + sizeof(Compass_data) + sizeof(GPS_data)) + 1] = {0};
+char mqtt_data[2 * (sizeof(MPU_data) + sizeof(Compass_data) + sizeof(GPS_data) + sizeof(Filter_data)) + 1] = {0};
 
 void displayInfo()
 {
@@ -68,7 +70,13 @@ void mqtt_pack_and_send()
     mqtt_data[2 * (sizeof(MPU_data) + sizeof(Compass_data)) + 2 * i] = ascii_lookup[raw >> 4];
     mqtt_data[2 * (sizeof(MPU_data) + sizeof(Compass_data)) + 2 * i + 1] = ascii_lookup[raw & 0x0F];
   }
-  mqtt_data[2 * (sizeof(MPU_data) + sizeof(Compass_data) + sizeof(GPS_data))] = 0;
+    for (i = 0; i < sizeof(Filter_data); i++)
+  {
+    char raw = ((char *)&filter_state.data)[i];
+    mqtt_data[2 * (sizeof(MPU_data) + sizeof(Compass_data) + sizeof(GPS_data)) + 2 * i] = ascii_lookup[raw >> 4];
+    mqtt_data[2 * (sizeof(MPU_data) + sizeof(Compass_data) + sizeof(GPS_data)) + 2 * i + 1] = ascii_lookup[raw & 0x0F];
+  }
+  mqtt_data[2 * (sizeof(MPU_data) + sizeof(Compass_data) + sizeof(GPS_data) + sizeof(Filter_data))] = 0;
   mqtt_conn.mqtt_client->publish("HP_PILOT_ONE/sensors", mqtt_data);
 }
 
@@ -83,10 +91,18 @@ void start_sensors()
   xTaskCreate(gps_handler, "gps_handler", 2000, &gps_d, 1, &gps_task);
 }
 
+void start_filter()
+{
+  filter_init(&filter_state, &mpu_d, &compass_d, &gps_d);
+
+  xTaskCreate(filter_handler, "filter_handler", 2000, &filter_state, 1, &filter_task);
+}
+
 void setup()
 {
   Serial.begin(9600);
   start_sensors();
+  start_filter();
   wifi_mqtt_init(&mqtt_conn);
 
   delay(1000);
@@ -95,7 +111,7 @@ void setup()
 void loop()
 {
   mqtt_loop(&mqtt_conn);
-  //displayInfo();
+  // displayInfo();
   mqtt_pack_and_send();
   delay(10);
 }
