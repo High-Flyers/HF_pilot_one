@@ -43,15 +43,11 @@ def get_rot_mat(roll, pitch, yaw):
 
 
 def quat_inv(quat):
-    den = quat[0] * quat[0] + \
-        quat[1] * quat[1] + \
-        quat[2] * quat[2] + \
-        quat[3] * quat[3]
     return np.array([
-        quat[0] / den,
-        -quat[1] / den,
-        -quat[2] / den,
-        -quat[3] / den,
+        quat[0],
+        -quat[1],
+        -quat[2],
+        -quat[3],
     ])
 
 
@@ -63,60 +59,13 @@ def quat_mult(p, q):
         p[0]*q[3] + p[1]*q[2] - p[2]*q[1] + p[3]*q[0],
     ])
 
-
-def rot_mat_to_quat(m):
-    if m[2, 2] < 0:
-        if m[0, 0] > m[1, 1]:
-            t = 1 + m[0, 0] - m[1, 1] - m[2, 2]
-            q = [t, m[0, 1]+m[1, 0], m[2, 0]+m[0, 2], m[1, 2]-m[2, 1]]
-        else:
-            t = 1 - m[0, 0] + m[1, 1] - m[2, 2]
-            q = [m[0, 1]+m[1, 0], t, m[1, 2] + m[2, 1], m[2, 0] - m[0, 2]]
-    else:
-        if m[0, 0] < -m[1, 1]:
-            t = 1 - m[0, 0] - m[1, 1] + m[2, 2]
-            q = [m[2, 0] + m[0, 2], m[1, 2] + m[2, 1], t, m[0, 1] - m[1, 0]]
-        else:
-            t = 1 + m[0, 0] + m[1, 1] + m[2, 2]
-            q = [m[1, 2]-m[2, 1], m[2, 0]-m[0, 2], m[0, 1]-m[1, 0], t]
-    q = np.array(q) * (0.5 / np.sqrt(t))
-    return q
-
-
-def rot_mat_to_quat_old(mat):
-    _, eigenvectors = np.linalg.eig(mat)
-    for v in eigenvectors:
-        if (v.real == v).all():
-            vec = v.real
-            break
-    vec = vec / np.linalg.norm(vec)
-    vec_perp = np.array([(vec[1]-vec[2]), -vec[0], vec[0]])
-    vec_perp /= np.linalg.norm(vec_perp)
-    theta = np.arccos(np.dot(vec, vec_perp))
-    # theta = np.arccos(0.5 * (np.trace(mat) - 1))
-    # w x y z
-    quat = np.array([
-        np.cos(theta / 2),
-        np.sin(theta / 2) * vec[0],
-        np.sin(theta / 2) * vec[1],
-        np.sin(theta / 2) * vec[2],
-    ])
-    return quat
-
+def quat_rot(roll, pitch, yaw):
+    qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+    qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+    qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    return [qw, qx, qy, qz]
 
 def quat_sandwich(q, v):
     '''returns q*v*q_inv'''
     return quat_mult(quat_mult(q, v), quat_inv(q))
-
-
-for i in np.arange(0, np.pi, 0.1):
-    drone_transform = get_rot_mat(i, i, -0.75*i)
-    q_rot = rot_mat_to_quat_old(drone_transform)
-
-    vec = np.array([1, 0, 0])
-    vec = np.matmul(drone_transform, vec)
-
-    quat = np.array([0, 1, 0, 0])
-    quat = quat_sandwich(q_rot, quat)[1::]
-
-    print(np.linalg.norm(vec - quat))
