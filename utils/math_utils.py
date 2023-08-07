@@ -84,14 +84,16 @@ def rot_mat_to_quat(m):
 
 
 def rot_mat_to_quat_old(mat):
-    eigenvalues, eigenvectors = np.linalg.eig(mat)
-    target = 0
-    for i in range(1, 3):
-        if np.abs(eigenvalues[i] - 1) < np.abs(eigenvalues[target] - 1):
-            target = i
-    vec = eigenvalues[target] * eigenvectors[target]
+    _, eigenvectors = np.linalg.eig(mat)
+    for v in eigenvectors:
+        if (v.real == v).all():
+            vec = v.real
+            break
     vec = vec / np.linalg.norm(vec)
-    theta = np.arccos(0.5 * (np.trace(mat) - 1))
+    vec_perp = np.array([(vec[1]-vec[2]), -vec[0], vec[0]])
+    vec_perp /= np.linalg.norm(vec_perp)
+    theta = np.arccos(np.dot(vec, vec_perp))
+    # theta = np.arccos(0.5 * (np.trace(mat) - 1))
     # w x y z
     quat = np.array([
         np.cos(theta / 2),
@@ -109,7 +111,7 @@ def quat_sandwich(q, v):
 
 for i in np.arange(0, np.pi, 0.1):
     drone_transform = get_rot_mat(i, i, -0.75*i)
-    q_rot = rot_mat_to_quat(drone_transform)
+    q_rot = rot_mat_to_quat_old(drone_transform)
 
     vec = np.array([1, 0, 0])
     vec = np.matmul(drone_transform, vec)
