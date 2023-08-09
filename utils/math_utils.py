@@ -59,13 +59,22 @@ def quat_mult(p, q):
         p[0]*q[3] + p[1]*q[2] - p[2]*q[1] + p[3]*q[0],
     ])
 
+
 def quat_rot(roll, pitch, yaw):
-    qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-    qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
-    qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
-    qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - \
+        np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + \
+        np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+    qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - \
+        np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+    qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + \
+        np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
     return [qw, qx, qy, qz]
+
 
 def quat_sandwich(q, v):
     '''returns q*v*q_inv'''
     return quat_mult(quat_mult(q, v), quat_inv(q))
+
+# drone_transform_quat = quat_rot(0, np.pi, -0.75*np.pi)
+# [0.0, 0.9238795325112867, 0.38268343236508984, 0.0]

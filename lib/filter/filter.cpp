@@ -1,6 +1,11 @@
 #include "filter.h"
 #include "Arduino.h"
 
+#define DRONE_FRAME_Q0 0.0
+#define DRONE_FRAME_Q1 0.9238795325112867
+#define DRONE_FRAME_Q2 0.38268343236508984
+#define DRONE_FRAME_Q3 0.0
+
 void filter_init(Filter_state *state, MPU_data *mpu_d, Compass_data *compass_d, GPS_data *gps_d)
 {
     state->mad_state = Madgwick();
@@ -42,6 +47,12 @@ void filter_handler(void *param)
         //     state->mpu_d->acc_x,
         //     state->mpu_d->acc_y,
         //     state->mpu_d->acc_z);
+
+        state->mad_state.computeAnglesFrame(
+            DRONE_FRAME_Q0,
+            DRONE_FRAME_Q1,
+            DRONE_FRAME_Q2,
+            DRONE_FRAME_Q3);
 
         state->data.pitch = state->mad_state.getPitch();
         state->data.roll = state->mad_state.getRoll();

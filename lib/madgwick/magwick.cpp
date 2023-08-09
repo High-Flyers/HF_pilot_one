@@ -232,7 +232,7 @@ void Madgwick::updateIMU(float gx, float gy, float gz, float ax, float ay, float
 // Fast inverse square-root
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
 
-float Madgwick::invSqrt(float x)
+inline float Madgwick::invSqrt(float x)
 {
 	float halfx = 0.5f * x;
 	float y = x;
@@ -251,5 +251,25 @@ void Madgwick::computeAngles()
 	roll = atan2f(q0 * q1 + q2 * q3, 0.5f - q1 * q1 - q2 * q2);
 	pitch = asinf(-2.0f * (q1 * q3 - q0 * q2));
 	yaw = atan2f(q1 * q2 + q0 * q3, 0.5f - q2 * q2 - q3 * q3);
+	anglesComputed = 1;
+}
+inline void Madgwick::quatMult(float q10, float q11, float q12, float q13, float q20, float q21, float q22, float q23, float &qr0, float &qr1, float &qr2, float &qr3)
+{
+	qr0 = q10 * q20 - q11 * q21 - q12 * q22 - q13 * q23;
+	qr1 = q10 * q21 + q11 * q20 + q12 * q23 - q13 * q22;
+	qr2 = q10 * q22 - q11 * q23 + q12 * q20 + q13 * q21;
+	qr3 = q10 * q23 + q11 * q22 - q12 * q21 + q13 * q20;
+}
+
+void Madgwick::computeAnglesFrame(float qf0, float qf1, float qf2, float qf3)
+{
+	static float qt0, qt1, qt2, qt3, qr0, qr1, qr2, qr3;
+
+	quatMult(qf0, qf1, qf2, qf3, q0, q1, q2, q3, qt0, qt1, qt2, qt3);
+	quatMult(qt0, qt1, qt2, qt3, qf0, -qf1, -qf2, -qf3, qr0, qr1, qr2, qr3);
+
+	roll = atan2f(qr0 * qr1 + qr2 * qr3, 0.5f - qr1 * qr1 - qr2 * qr2);
+	pitch = asinf(-2.0f * (qr1 * qr3 - qr0 * qr2));
+	yaw = atan2f(qr1 * qr2 + qr0 * qr3, 0.5f - qr2 * qr2 - qr3 * qr3);
 	anglesComputed = 1;
 }
