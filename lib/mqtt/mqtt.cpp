@@ -15,7 +15,9 @@ int wifi_mqtt_init(mqtt_conn_data *conn)
         delay(500);
     }
 
-    conn->mqtt_client->setServer(mqtt_server, 1883);
+    conn->mqtt_client->setServer(mqtt_server, 1883); 
+
+    Serial.println("MQTT Initialized");
     return 1;
 }
 
@@ -27,6 +29,7 @@ void wifi_reconnect()
         WiFi.reconnect();
         delay(100);
     }
+    Serial.println("WiFi reconnected");
 }
 void mqtt_reconnect(mqtt_conn_data *conn)
 {
@@ -43,6 +46,7 @@ void mqtt_reconnect(mqtt_conn_data *conn)
             delay(1000);
         }
     }
+    Serial.println("MQTT reconnected");
 }
 
 void mqtt_loop(mqtt_conn_data *conn)
