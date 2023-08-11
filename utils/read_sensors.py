@@ -1,9 +1,9 @@
-import time
 import numpy as np
 from MqttWrapper import MqttWrapper, SensorParser
 from math_utils import LowPassFilter, ComplimentaryFilter, get_rot_mat
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import time
 
 GYRO_OFFSET_PITCH = -3.2743889
 GYRO_OFFSET_ROLL = -1.2538174
@@ -38,7 +38,9 @@ def pitch_roll__yaw_from_gyro(gyro, p, r, y, dt):
 
 pitch_comb, roll_comb = 0.0, 0.0
 pitch, roll, yaw = 0.0, 0.0, 0.0
+pitch_g, roll_g, yaw_g = 0.0, 0.0, 0.0
 
+last_update = time.time()
 count = 0
 
 
@@ -51,20 +53,27 @@ def main():
     pitch_compl = ComplimentaryFilter(alpha=0.3)
     roll_compl = ComplimentaryFilter(alpha=0.3)
 
+
     def callback(data):
         global pitch_comb, roll_comb
         global pitch, roll, yaw
-        global count
+        global pitch_g, roll_g, yaw_g
+        global count, last_update
         sensors.unpack(data)
         # sensors.print()
-        pitch_acc, roll_acc = pitch_roll_from_acc(acc_filter.get(sensors.acc))
-        pitch_dt, roll_dt, _ = pitch_roll_yaw_dt_from_gyro(sensors.gyro)
-        pitch_comb = pitch_compl.update(pitch_acc, pitch_dt)
-        roll_comb = roll_compl.update(roll_acc, roll_dt)
+        # pitch_acc, roll_acc = pitch_roll_from_acc(acc_filter.get(sensors.acc))
+        # pitch_dt, roll_dt, _ = pitch_roll_yaw_dt_from_gyro(sensors.gyro)
+        # pitch_comb = pitch_compl.update(pitch_acc, pitch_dt)
+        # roll_comb = roll_compl.update(roll_acc, roll_dt)
 
         pitch = sensors.filter_pitch
         roll = sensors.filter_roll
         yaw = sensors.filter_yaw
+
+        now_update = time.time()
+        dt = now_update - last_update
+        # pitch_g, roll_g, yaw_g = pitch_roll__yaw_from_gyro(sensors.gyro, pitch_g, roll_g, yaw_g, dt)
+        last_update = now_update
 
         # count = (count + 1) % 4
         # if count == 0:
@@ -93,13 +102,9 @@ def main():
     plt.ion()
     plt.show()
 
-    import time
     while (True):
-        # time.sleep(1)
-        # continue
-        print("{:.2f} {:.2f}\t{:.2f} {:.2f} {:.2f}".format(
-            pitch_acc, roll_acc, pitch_raw_gyro, roll_raw_gyro, yaw_raw_gyro))
-        # print("{:.2f} {:.2f} {:.2f}".format(pitch, roll, yaw))
+        # print("{:.2f} {:.2f} {:.2f}".format(pitch_g, roll_g, yaw_g))
+        print("{:.2f} {:.2f} {:.2f}".format(pitch, roll, yaw))
 
         xs.append(time.time())
         y1s.append(pitch)
