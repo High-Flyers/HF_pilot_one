@@ -60,6 +60,7 @@ void mpu_init(MPU_data *data)
     data->gyro_y = 0.0f;
     data->gyro_z = 0.0f;
 }
+
 void mpu_handler(void *param)
 {
     MPU_data *data = (MPU_data *)param;
@@ -105,6 +106,7 @@ void compass_init(Compass_data *data)
     data->mag_y = 0.0f;
     data->mag_z = 0.0f;
 }
+
 void compass_handler(void *param)
 {
     Compass_data *data = (Compass_data *)param;
@@ -126,8 +128,8 @@ void compass_handler(void *param)
 
         sensors_event_t mag_event;
         mag.getEvent(&mag_event);
-        data->mag_x = - (mag_event.magnetic.x - COMPASS_CORRECTION_X);
-        data->mag_y = - (mag_event.magnetic.y - COMPASS_CORRECTION_Y);
+        data->mag_x = -(mag_event.magnetic.x - COMPASS_CORRECTION_X);
+        data->mag_y = -(mag_event.magnetic.y - COMPASS_CORRECTION_Y);
         data->mag_z = mag_event.magnetic.z - COMPASS_CORRECTION_Z;
 
         u_int32_t end = millis() - start;

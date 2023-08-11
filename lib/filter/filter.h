@@ -4,7 +4,7 @@
 #include "../madgwick/madgwick.h"
 #include "../sensors/Sensors.h"
 
-#define FILTER_RATE 100.f
+#define FILTER_RATE 50.f
 
 typedef struct
 {
