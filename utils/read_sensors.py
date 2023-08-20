@@ -20,6 +20,14 @@ def pitch_roll_from_acc(acc):
     return pitch, roll
 
 
+def yaw_from_mag(mag):
+    normalized = (180.0 / np.pi) * np.matmul(drone_transform, mag)
+    heading = (180.0 / np.pi) * np.arctan2(normalized[1], normalized[0])
+    if heading < 0.0:
+        heading += 360.0
+    return heading
+
+
 def pitch_roll_yaw_dt_from_gyro(gyro):
     normalized = (180.0 / np.pi) * np.matmul(drone_transform, gyro)
     pitch_dt = normalized[1] + GYRO_OFFSET_PITCH
@@ -28,7 +36,7 @@ def pitch_roll_yaw_dt_from_gyro(gyro):
     return pitch_dt, roll_dt, yaw_dt
 
 
-def pitch_roll__yaw_from_gyro(gyro, p, r, y, dt):
+def pitch_roll_yaw_from_gyro(gyro, p, r, y, dt):
     p_t, r_t, y_t = pitch_roll_yaw_dt_from_gyro(gyro)
     pitch = p + p_t * dt
     roll = r + r_t * dt
@@ -53,7 +61,6 @@ def main():
     pitch_compl = ComplimentaryFilter(alpha=0.3)
     roll_compl = ComplimentaryFilter(alpha=0.3)
 
-
     def callback(data):
         global pitch_comb, roll_comb
         global pitch, roll, yaw
@@ -62,13 +69,19 @@ def main():
         sensors.unpack(data)
         # sensors.print()
         # pitch_acc, roll_acc = pitch_roll_from_acc(acc_filter.get(sensors.acc))
+        pitch_acc, roll_acc = pitch_roll_from_acc(sensors.acc)
+        yaw_mag = yaw_from_mag(sensors.mag)
         # pitch_dt, roll_dt, _ = pitch_roll_yaw_dt_from_gyro(sensors.gyro)
         # pitch_comb = pitch_compl.update(pitch_acc, pitch_dt)
         # roll_comb = roll_compl.update(roll_acc, roll_dt)
 
-        pitch = sensors.filter_pitch
-        roll = sensors.filter_roll
-        yaw = sensors.filter_yaw
+        # pitch = sensors.filter_pitch
+        # roll = sensors.filter_roll
+        # yaw = sensors.filter_yaw
+
+        pitch = pitch_acc
+        roll = roll_acc
+        yaw = yaw_mag
 
         now_update = time.time()
         dt = now_update - last_update
