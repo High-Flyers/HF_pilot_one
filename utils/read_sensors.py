@@ -15,7 +15,12 @@ drone_transform = get_rot_mat(0, np.pi, -0.75*np.pi)
 def pitch_roll_from_acc(acc):
     normalized = np.matmul(drone_transform, acc)
     pitch = (180.0 / np.pi) * \
-        np.arctan2(normalized[0], np.sqrt(normalized[1]**2 + normalized[2]**2))
+        np.arcsin(normalized[0] / np.sqrt(normalized[0]**2 + normalized[1]**2 + normalized[2]**2))
+    if normalized[2] < 0:
+        if normalized[0] >= 0.0:
+            pitch =  180.0 - pitch
+        else:
+            pitch = -180.0 - pitch
     roll = (180.0 / np.pi) * np.arctan2(normalized[1], normalized[2])
     return pitch, roll
 
