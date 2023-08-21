@@ -4,7 +4,7 @@
 #include "../madgwick/madgwick.h"
 #include "../sensors/Sensors.h"
 
-#define FILTER_RATE 50.f
+#define FILTER_RATE 100.f
 
 typedef struct
 {
@@ -13,7 +13,6 @@ typedef struct
 
 typedef struct
 {
-    Madgwick mad_state;
     Filter_data data;
     MPU_data *mpu_d;
     Compass_data *compass_d;

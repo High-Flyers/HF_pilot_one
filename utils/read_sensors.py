@@ -15,10 +15,11 @@ drone_transform = get_rot_mat(0, np.pi, -0.75*np.pi)
 def pitch_roll_from_acc(acc):
     normalized = np.matmul(drone_transform, acc)
     pitch = (180.0 / np.pi) * \
-        np.arcsin(normalized[0] / np.sqrt(normalized[0]**2 + normalized[1]**2 + normalized[2]**2))
+        np.arcsin(normalized[0] / np.sqrt(normalized[0] **
+                  2 + normalized[1]**2 + normalized[2]**2))
     if normalized[2] < 0:
         if normalized[0] >= 0.0:
-            pitch =  180.0 - pitch
+            pitch = 180.0 - pitch
         else:
             pitch = -180.0 - pitch
     roll = (180.0 / np.pi) * np.arctan2(normalized[1], normalized[2])
@@ -35,8 +36,8 @@ def yaw_from_mag(mag):
 
 def pitch_roll_yaw_dt_from_gyro(gyro):
     normalized = (180.0 / np.pi) * np.matmul(drone_transform, gyro)
-    pitch_dt = normalized[1] + GYRO_OFFSET_PITCH
     roll_dt = normalized[0] + GYRO_OFFSET_ROLL
+    pitch_dt = normalized[1] + GYRO_OFFSET_PITCH
     yaw_dt = normalized[2] + GYRO_OFFSET_YAW
     return pitch_dt, roll_dt, yaw_dt
 
@@ -74,19 +75,21 @@ def main():
         sensors.unpack(data)
         # sensors.print()
         # pitch_acc, roll_acc = pitch_roll_from_acc(acc_filter.get(sensors.acc))
-        pitch_acc, roll_acc = pitch_roll_from_acc(sensors.acc)
-        yaw_mag = yaw_from_mag(sensors.mag)
+        # pitch_acc, roll_acc = pitch_roll_from_acc(sensors.acc)
+        # yaw_mag = yaw_from_mag(sensors.mag)
         # pitch_dt, roll_dt, _ = pitch_roll_yaw_dt_from_gyro(sensors.gyro)
         # pitch_comb = pitch_compl.update(pitch_acc, pitch_dt)
         # roll_comb = roll_compl.update(roll_acc, roll_dt)
 
-        # pitch = sensors.filter_pitch
-        # roll = sensors.filter_roll
-        # yaw = sensors.filter_yaw
+        pitch = sensors.filter_pitch
+        roll = sensors.filter_roll
+        yaw = sensors.filter_yaw
+ 
+        print("{:.2f} {:.2f} {:.2f}".format(pitch, roll, yaw))
 
-        pitch = pitch_acc
-        roll = roll_acc
-        yaw = yaw_mag
+        # pitch = pitch_acc
+        # roll = roll_acc
+        # yaw = yaw_mag
 
         now_update = time.time()
         dt = now_update - last_update
@@ -122,7 +125,7 @@ def main():
 
     while (True):
         # print("{:.2f} {:.2f} {:.2f}".format(pitch_g, roll_g, yaw_g))
-        print("{:.2f} {:.2f} {:.2f}".format(pitch, roll, yaw))
+        # print("{:.2f} {:.2f} {:.2f}".format(pitch, roll, yaw))
 
         xs.append(time.time())
         y1s.append(pitch)

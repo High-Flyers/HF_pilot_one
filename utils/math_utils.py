@@ -78,3 +78,9 @@ def quat_sandwich(q, v):
 
 # drone_transform_quat = quat_rot(0, np.pi, -0.75*np.pi)
 # [0.0, 0.9238795325112867, 0.38268343236508984, 0.0]
+
+# drone_transform = get_rot_mat(0, np.pi, -0.75*np.pi)
+# print(drone_transform)
+# [[ 7.0710677e-01  7.0710677e-01 -8.6595606e-17]
+#  [ 7.0710677e-01 -7.0710677e-01 -8.6595606e-17]
+#  [-1.2246469e-16 -0.0000000e+00 -1.0000000e+00]]

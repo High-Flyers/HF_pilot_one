@@ -4,7 +4,7 @@
 
 #define GPS_RATE 5.0f
 #define MPU_RATE 500.0f
-#define COMPASS_RATE 40.0f
+#define COMPASS_RATE 50.0f
 
 #define GPS_SERIAL_RX 16
 #define GPS_SERIAL_TX 17
