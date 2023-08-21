@@ -3,8 +3,8 @@
 #include <Functions.h> // CCcontrol library
 
 static uint8_t L = 3;                                 /* How many states we have -> roll pitch yaw */
-static float r = 1.5f;                                /* Tuning factor for noise */
-static float q = 0.2f;                                /* Tuning factor for disturbance */
+static float r = 1.f;                                 /* Tuning factor for noise */
+static float q = 1.f;                                 /* Tuning factor for disturbance */
 static float alpha = 0.1f;                            /* Alpha value - A small number like 0.01 -> 1.0 */
 static float beta = 2.0f;                             /* Beta value - Normally 2 for gaussian noise */
 static float Rv[3 * 3] = {q, 0, 0, 0, q, 0, 0, 0, q}; /* Initial disturbance covariance matrix - Recommended to use identity matrix */
@@ -17,9 +17,8 @@ static float x[3] = {0, 0, 0};                        /* State vector for the sy
 static float dt_ms = 0.0f;
 
 static float rot_mat[3 * 3] = {
-    0.70710677, 0.70710677, 0.0,
-    0.70710677, -0.70710677, 0.0,
-    0.0, 0.0 - 1.0};
+    0.7071, 0.7071, -0.0000, 0.7071, -0.7071, -0.0000,
+    -0.0000, -0.0000, -1.0000};
 
 #define RAD_TO_DEG 57.29577951308232
 
@@ -48,23 +47,9 @@ void mat_mul(float *y, float *mat, float *x)
 /* transition function */
 void F_trans(float dx[], float x[], float u[])
 {
-    dx[0] = x[0] + u[0];
-    if (dx[0] > 180.f)
-        dx[0] -= 360.f;
-    else if (dx[0] < -180.f)
-        dx[0] += 360.f;
-
-    dx[1] = x[1] + u[1];
-    if (dx[1] > 180.f)
-        dx[1] -= 360.f;
-    else if (dx[1] < -180.f)
-        dx[1] += 360.f;
-
-    dx[2] = x[2] + u[2];
-    if (dx[2] > 360.f)
-        dx[2] -= 360.f;
-    else if (dx[2] < 0.f)
-        dx[2] += 360.f;
+    dx[0] = u[0];
+    dx[1] = u[1];
+    dx[2] = u[2];
 }
 
 void filter_handler(void *param)
@@ -94,9 +79,9 @@ void filter_handler(void *param)
         temp_calc1[1] = state->mpu_d->gyro_y;
         temp_calc1[2] = state->mpu_d->gyro_z;
         mat_mul(u, rot_mat, temp_calc1);
-        u[0] = RAD_TO_DEG * u[0] + GYRO_OFFSET_ROLL;
-        u[1] = RAD_TO_DEG * u[1] + GYRO_OFFSET_PITCH;
-        u[2] = RAD_TO_DEG * u[2] + GYRO_OFFSET_YAW;
+        u[0] = (RAD_TO_DEG * u[0] + GYRO_OFFSET_ROLL) * dt_ms;
+        u[1] = (RAD_TO_DEG * u[1] + GYRO_OFFSET_PITCH) * dt_ms;
+        u[2] = (RAD_TO_DEG * u[2] + GYRO_OFFSET_YAW) * dt_ms;
 
         // get compass and acc measurment, translate and change to roll pitch yaw
         temp_calc1[0] = state->mpu_d->acc_x;
@@ -125,17 +110,35 @@ void filter_handler(void *param)
         y[1] = pitch_acc;
         y[2] = yaw_mag;
 
-        // use this data to pass into filter
-        sr_ukf_state_estimation(y, xhat, Rn, Rv, u, F_trans, S, alpha, beta, L);
+        // // use this data to pass into filter
+        // sr_ukf_state_estimation(y, xhat, Rn, Rv, u, F_trans, S, alpha, beta, L);
 
-        // move data to output struct
-        state->data.roll = xhat[0];
-        state->data.pitch = xhat[1];
-        state->data.yaw = xhat[2];
+        // // move data to output struct
+        // state->data.roll = xhat[0];
+        // state->data.pitch = xhat[1];
+        // state->data.yaw = xhat[2];
+
+        // state->data.roll = 0.3 * y[0] + 0.7 * (state->data.roll + u[0]);
+        // state->data.pitch = 0.3 * y[1] + 0.7 * (state->data.pitch + u[1]);
+        // state->data.yaw = 0.3 * y[2] + 0.7 * (state->data.yaw + u[2]);
+
+        // state->data.roll += u[0];
+        // state->data.pitch += u[1];
+        // state->data.yaw += u[2];
+
+        state->data.roll = y[0];
+        state->data.pitch = y[1];
+        state->data.yaw = y[2];
 
         u_int32_t end = millis() - start;
-        dt_ms = (float)end / 1000.0f;
         if (end < rate)
+        {
+            dt_ms = (float)rate / 1000.f;
             delay(rate - end);
+        }
+        else
+        {
+            dt_ms = (float)end / 1000.f;
+        }
     }
 }

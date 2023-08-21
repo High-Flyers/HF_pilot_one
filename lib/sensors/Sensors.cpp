@@ -7,6 +7,10 @@
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_HMC5883_U.h>
 
+#define COMPASS_CORRECTION_X -8.8181801
+#define COMPASS_CORRECTION_Y -17.2272739
+#define COMPASS_CORRECTION_Z 8.7244892
+
 void gps_init(GPS_data *data)
 {
     data->avalaible = false;
@@ -70,8 +74,8 @@ void mpu_handler(void *param)
     {
         Serial.println("Failed to find MPU6050 chip");
         data->acc_x = -1.0;
-        data->acc_x = -1.0;
-        data->acc_x = -1.0;
+        data->acc_y = -1.0;
+        data->acc_z = -1.0;
         delay(500);
     }
 

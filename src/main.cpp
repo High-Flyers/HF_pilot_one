@@ -95,7 +95,7 @@ void start_filter()
 {
   filter_init(&filter_state, &mpu_d, &compass_d, &gps_d);
 
-  xTaskCreate(filter_handler, "filter_handler", 2000, &filter_state, 1, &filter_task);
+  xTaskCreate(filter_handler, "filter_handler", 8000, &filter_state, 1, &filter_task);
 }
 
 void setup()
